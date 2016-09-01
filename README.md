@@ -6,3 +6,7 @@ Example Actor 'Vocabulary' extracts words with meaning and examples from learnin
 html file to print (phrasal1).
 
 Extraction uses a CSS selectors to get content from html elements.
+
+Used:
+- Akka for concurrent collecting bodies of sites
+- Jsoup from CSS selection
