@@ -6,8 +6,19 @@ import akka.actor._
 
 import scala.xml.XML
 
-class Main extends Actor {
+/**
+  * gets content from http://www.ang.pl/slownictwo/phrasal-verbs and extracts phrasal verbs with translations and
+  * examples to html file phrasal1.html
+  */
+class Vocabulary extends Actor {
 
+  /**
+    * generates html with vocabulary
+    * @param docTitle title of documents
+    * @param separator separator between columns
+    * @param docContent rows with content
+    * @return generated html
+    */
   def generateHtml(docTitle: String, separator: String, docContent: List[String]): String = {
     import scalatags.Text.all._
 
@@ -23,8 +34,11 @@ class Main extends Actor {
         docContent.map(row(_))
       )
 
+    "<!DOCTYPE html>" +
     html(
-      head(),
+      head(
+        meta(charset := "utf-8")
+      ),
       body(
         h1(docTitle),
         createTable
@@ -74,43 +88,4 @@ class Main extends Actor {
     BodyGetter.close()
   }
 
-}
-
-
-class Job extends Actor {
-  val extractor = context.actorOf(
-    Props(
-      new ExtractorManager(new java.net.URL("http://pl.indeed.com/praca?q=Java&l="),
-        """(/praca?q=Scala&start=.*)|(/rc/clk?.*)""".r,
-        ExtractionTask(
-            Text("body")
-        ),
-        depth = 5)
-    ),
-    name = "job"
-  )
-
-  override def receive = {
-    case Result(content, visited) =>
-      println(s"Visited: ${visited.size}")
-      println(visited.mkString("\n"))
-      var master = 0
-      var beachelor = 0
-      var degree = 0
-
-      for (c <- content.map(_.toLowerCase)) {
-        println(c)
-        val general = c.indexOf("degree") > 0 || c.indexOf("wykształcenie") > 0 || c.indexOf("studia") > 0
-        val bech = c.indexOf("bachelor") > 0 || c.indexOf("inżyniersk") > 0 || c.indexOf("licencjat") > 0
-        val mast = c.indexOf("master") > 0 || c.indexOf("magister") > 0
-        if (general) degree += 1
-        if (general && bech) beachelor += 1
-        if (general && mast) master += 1
-      }
-
-      println(s"degree: $degree")
-      println(s"bachelor: $beachelor")
-      println(s"master: $master")
-      context.stop(self)
-  }
 }
